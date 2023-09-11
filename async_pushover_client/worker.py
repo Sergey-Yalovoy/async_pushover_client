@@ -1,5 +1,3 @@
-import asyncio
-from async_websocket_client.apps import AsyncWebSocketApp
 from async_websocket_client.dispatchers import BaseDispatcher
 from main import OpenAPI
 import settings

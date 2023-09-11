@@ -1,8 +1,12 @@
+import json
 import requests
 import settings
 from exceptions import AuthenticationError, MessagesError
 from typing import Union
 import aiohttp
+import logging
+import aiofiles
+import asyncio
 
 
 class OpenAPI:
@@ -83,7 +87,7 @@ class OpenAPI:
         else:
             raise MessagesError(message=response.text)
 
-    async def a_clear_messages(self, message_id):
+    async def a_clear_message_by_id(self, message_id: int):
         url = settings.CLEAR_MESSAGE_URL.format(device_id=self.device_id)
         async with aiohttp.ClientSession() as session:
             async with session.get(url,
@@ -93,3 +97,42 @@ class OpenAPI:
                     return await response.json()
                 else:
                     raise MessagesError(message=await response.text())
+
+    async def a_clear_messages(self, messages_id: list):
+        await asyncio.gather(*map(self.a_clear_message_by_id, messages_id))
+
+    def launch_preparation(self, name_device: str = None, make_auth_file: bool = True) -> dict:
+        self.login()
+        if not self.device_id:
+            logging.info('Try register device by name')
+            if not name_device:
+                logging.warning('hmmm... name_device is not indicated')
+                name_device = 'worker'
+                logging.warning(f'set name {name_device}')
+            self.device_registration(name=name_device)
+            logging.info(f'you`re device id is {self.device_id}')
+        if make_auth_file:
+            with open('auth_data.json', 'w') as f:
+                f.write(json.dumps(self.__dict__()))
+        messages = self.get_messages()
+        for message in messages:
+            self.clear_messages(message.get('id'))
+        return messages
+
+    @staticmethod
+    async def a_get_list_id_from_dict(messages: dict) -> list:
+        return [message.get('id') for message in messages]
+
+    async def a_launch_preparation(self, name_device: str = None, make_auth_file: bool = True) -> dict:
+        await self.a_login()
+        if not self.device_id:
+            if not name_device:
+                name_device = 'worker'
+            await self.a_device_registration(name=name_device)
+        if make_auth_file:
+            async with aiofiles.open('auth_data.json', mode='w') as f:
+                await f.write(json.dumps(self.__dict__()))
+        messages = await self.a_get_messages()
+        ids = await OpenAPI.a_get_list_id_from_dict(messages)
+        await self.a_clear_messages(ids)
+        return messages
