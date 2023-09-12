@@ -9,6 +9,7 @@ class WSClientPushOver(BaseDispatcher):
         super().__init__(*args, **kwargs)
         api = OpenAPI(settings.EMAIL_USERNAME, settings.PASSWORD,
                       device_id=settings.DEVICE_ID)
+        await api.a_launch_preparation()
         self.api: OpenAPI = api
 
     async def on_connect(self) -> Any:
