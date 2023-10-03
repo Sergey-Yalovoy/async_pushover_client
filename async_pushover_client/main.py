@@ -104,13 +104,13 @@ class OpenAPI:
     def launch_preparation(self, name_device: str = None, make_auth_file: bool = True) -> dict:
         self.login()
         if not self.device_id:
-            logging.info('Try register device by name')
+            logger.info('Try register device by name')
             if not name_device:
-                logging.warning('hmmm... name_device is not indicated')
+                logger.warning('hmmm... name_device is not indicated')
                 name_device = 'worker'
-                logging.warning(f'set name {name_device}')
+                logger.warning(f'set name {name_device}')
             self.device_registration(name=name_device)
-            logging.info(f'you`re device id is {self.device_id}')
+            logger.info(f'you`re device id is {self.device_id}')
         if make_auth_file:
             with open('auth_data.json', 'w') as f:
                 f.write(json.dumps(self.__dict__))
