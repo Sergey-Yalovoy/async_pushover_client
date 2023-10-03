@@ -1,7 +1,7 @@
 import json
 import requests
-import settings
-from exceptions import AuthenticationError, MessagesError
+from .settings import *
+from .exceptions import AuthenticationError, MessagesError
 from typing import Union
 import aiohttp
 import logging
@@ -18,7 +18,7 @@ class OpenAPI:
         self.device_id: Union[str, None] = device_id
 
     def login(self):
-        response = requests.post(settings.LOGIN_URL, data=self.__dict__)
+        response = requests.post(LOGIN_URL, data=self.__dict__)
         if response.status_code == 200:
             auth_data = response.json()
             self.secret = auth_data.get('secret')
@@ -27,7 +27,7 @@ class OpenAPI:
 
     async def a_login(self):
         async with aiohttp.ClientSession() as session:
-            async with session.post(settings.LOGIN_URL, data=self.__dict__) as response:
+            async with session.post(LOGIN_URL, data=self.__dict__) as response:
                 if response.status == 200:
                     auth_data: dict = await response.json()
                     self.secret = auth_data.get('secret')
@@ -35,7 +35,7 @@ class OpenAPI:
                     raise AuthenticationError()
 
     def device_registration(self, name, os='O'):
-        response = requests.post(settings.DEVICE_REGISTRATION_URL,
+        response = requests.post(DEVICE_REGISTRATION_URL,
                                  data=dict(secret=self.secret,
                                            name=name,
                                            os=os))
@@ -47,7 +47,7 @@ class OpenAPI:
 
     async def a_device_registration(self, name, os='O'):
         async with aiohttp.ClientSession() as session:
-            async with session.post(settings.DEVICE_REGISTRATION_URL,
+            async with session.post(DEVICE_REGISTRATION_URL,
                                     data=dict(secret=self.secret,
                                               name=name,
                                               os=os)) as response:
@@ -58,7 +58,7 @@ class OpenAPI:
                     raise AuthenticationError(message=await response.text())
 
     def get_messages(self):
-        response = requests.get(settings.MESSAGE_URL,
+        response = requests.get(MESSAGE_URL,
                                 params=dict(secret=self.secret,
                                             device_id=self.device_id))
         if response.status_code == 200:
@@ -69,7 +69,7 @@ class OpenAPI:
 
     async def a_get_messages(self):
         async with aiohttp.ClientSession() as session:
-            async with session.get(settings.MESSAGE_URL,
+            async with session.get(MESSAGE_URL,
                                    params=dict(secret=self.secret,
                                                device_id=self.device_id)) as response:
                 if response.status == 200:
@@ -88,7 +88,7 @@ class OpenAPI:
             raise MessagesError(message=response.text)
 
     async def a_clear_message_by_id(self, message_id: int):
-        url = settings.CLEAR_MESSAGE_URL.format(device_id=self.device_id)
+        url = CLEAR_MESSAGE_URL.format(device_id=self.device_id)
         async with aiohttp.ClientSession() as session:
             async with session.get(url,
                                    params=dict(secret=self.secret,
@@ -113,7 +113,7 @@ class OpenAPI:
             logging.info(f'you`re device id is {self.device_id}')
         if make_auth_file:
             with open('auth_data.json', 'w') as f:
-                f.write(json.dumps(self.__dict__()))
+                f.write(json.dumps(self.__dict__))
         messages = self.get_messages()
         for message in messages:
             self.clear_messages(message.get('id'))

@@ -1,15 +1,15 @@
 from async_websocket_client.dispatchers import BaseDispatcher
-from main import OpenAPI
-import settings
+from .main import OpenAPI
+from .settings import *
 from typing import Any
 
 
 class WSClientPushOver(BaseDispatcher):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        api = OpenAPI(settings.EMAIL_USERNAME, settings.PASSWORD,
-                      device_id=settings.DEVICE_ID)
-        await api.a_launch_preparation()
+        api = OpenAPI(EMAIL_USERNAME, PASSWORD,
+                      device_id=DEVICE_ID)
+        self.messages = api.launch_preparation()
         self.api: OpenAPI = api
 
     async def on_connect(self) -> Any:
