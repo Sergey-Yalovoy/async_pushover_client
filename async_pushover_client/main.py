@@ -119,6 +119,12 @@ class OpenAPI:
             self.clear_messages(message.get('id'))
         return messages
 
+    def receiving_notifications(self) -> dict:
+        messages = self.get_messages()
+        for message in messages:
+            self.clear_messages(message.get('id'))
+        return messages
+
     @staticmethod
     async def a_get_list_id_from_dict(messages: dict) -> list:
         return [message.get('id') for message in messages]
@@ -132,6 +138,12 @@ class OpenAPI:
         if make_auth_file:
             async with aiofiles.open('auth_data.json', mode='w') as f:
                 await f.write(json.dumps(self.__dict__()))
+        messages = await self.a_get_messages()
+        ids = await OpenAPI.a_get_list_id_from_dict(messages)
+        await self.a_clear_messages(ids)
+        return messages
+
+    async def a_receiving_notifications(self) -> dict:
         messages = await self.a_get_messages()
         ids = await OpenAPI.a_get_list_id_from_dict(messages)
         await self.a_clear_messages(ids)
